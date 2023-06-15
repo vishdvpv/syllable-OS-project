@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CFS Scheduling Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: rgb(238,174,202);
+            background: linear-gradient(254deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        label {
+            font-weight: bold;
+        }
+        
+        input {
+            margin: 5px;
+            padding: 5px;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: rgb(0, 48, 159);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        #vruntime-results {
+            margin-top: 20px;
+        }
+        
+        .result {
+            margin: 5px 0;
+            font-weight: bold;
+            color: rgb(0, 48, 159);
+            text-align: center;
+        }
+    </style>
+    <script>
+       
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+        
+        
+        class BinarySearchTree {
+            constructor() {
+                this.root = null;
+            }
+            
+            
+            insert(value) {
+                const newNode = new Node(value);
+                
+                if (this.root === null) {
+                    this.root = newNode;
+                } else {
+                    this.insertNode(this.root, newNode);
+                }
+            }
+            
+            
+            insertNode(node, newNode) {
+                if (newNode.value < node.value) {
+                    if (node.left === null) {
+                        node.left = newNode;
+                    } else {
+                        this.insertNode(node.left, newNode);
+                    }
+                } else {
+                    if (node.right === null) {
+                        node.right = newNode;
+                    } else {
+                        this.insertNode(node.right, newNode);
+                    }
+                }
+            }
+            
+            
+            getMinValue() {
+                let current = this.root;
+                
+                while (current.left !== null) {
+                    current = current.left;
+                }
+                
+                return current.value;
+            }
+            
+            
+            printTree() {
+                let result = [];
+
+                function traverseInOrder(node) {
+                    if (node !== null) {
+                        traverseInOrder(node.left);
+                        result.push(node.value);
+                        traverseInOrder(node.right);
+                    }
+                }
+
+                traverseInOrder(this.root);
+                return result;
+            }
+        }
+        
+        function calculateVruntime() {
+            var parentVruntimes = [];
+            var deltaExecs = [];
+            var lws = [];
+            var weights = [];
+            
+            var numProcesses = parseInt(document.getElementById('num-processes').value);
+            
+            
+            for (var i = 1; i <= numProcesses; i++) {
+                parentVruntimes.push(parseFloat(document.getElementById('parent-vruntime-' + i).value));
+                deltaExecs.push(parseFloat(document.getElementById('delta-exec-' + i).value));
+                lws.push(parseFloat(document.getElementById('lw-' + i).value));
+                weights.push(parseFloat(document.getElementById('weight-' + i).value));
+            }
+            
+            var vruntimeTree = new BinarySearchTree();
+            
+            
+            for (var i = 0; i < numProcesses; i++) {
+                var vruntime = parentVruntimes[i] + (deltaExecs[i] * lws[i]) / weights[i];
+                vruntimeTree.insert(vruntime);
+            }
+            
+            
+            var resultContainer = document.getElementById('vruntime-results');
+            resultContainer.innerHTML = "";
+            
+            var minValue = vruntimeTree.getMinValue();
+            var resultElement = document.createElement("p");
+            resultElement.classList.add("result");
+            resultElement.textContent = "Minimum Vruntime: " + minValue;
+            resultContainer.appendChild(resultElement);
+            
+            var treeValues = vruntimeTree.printTree();
+            var treeOutput = document.createElement("p");
+            treeOutput.classList.add("result");
+            treeOutput.textContent = "Tree Values: " + treeValues.join(", ");
+            resultContainer.appendChild(treeOutput);
+        }
+    </script>
+</head>
+<body>
+    <h1>CFS Scheduling Algorithm</h1>
+    
+    <label for="num-processes">Number of Processes:</label>
+    <input type="number" id="num-processes" min="1"><br>
+    <p>input parent_vruntime, data_execution time, load weight, and process weight respectively</p>
+    
+    <div id="input-fields"></div>
+    
+    <button onclick="calculateVruntime()">Calculate Vruntimes and BST insertions </button>
+    
+    <div id="vruntime-results"></div>
+    
+    <script>
+        
+        document.getElementById('num-processes').addEventListener('input', function() {
+            var numProcesses = parseInt(document.getElementById('num-processes').value);
+            var inputFieldsContainer = document.getElementById('input-fields');
+            inputFieldsContainer.innerHTML = "";
+            
+            for (var i = 1; i <= numProcesses; i++) {
+                var processLabel = document.createElement("label");
+                processLabel.textContent = "Process " + i + ":";
+                inputFieldsContainer.appendChild(processLabel);
+                
+                var parentVruntimeInput = document.createElement("input");
+                parentVruntimeInput.type = "text";
+                parentVruntimeInput.id = "parent-vruntime-" + i;
+                inputFieldsContainer.appendChild(parentVruntimeInput);
+                
+                var deltaExecInput = document.createElement("input");
+                deltaExecInput.type = "text";
+                deltaExecInput.id = "delta-exec-" + i;
+                inputFieldsContainer.appendChild(deltaExecInput);
+                
+                var lwInput = document.createElement("input");
+                lwInput.type = "text";
+                lwInput.id = "lw-" + i;
+                inputFieldsContainer.appendChild(lwInput);
+                
+                var weightInput = document.createElement("input");
+                weightInput.type = "text";
+                weightInput.id = "weight-" + i;
+                inputFieldsContainer.appendChild(weightInput);
+                
+                var lineBreak = document.createElement("br");
+                inputFieldsContainer.appendChild(lineBreak);
+            }
+        });
+    </script>
+</body>
+</html>

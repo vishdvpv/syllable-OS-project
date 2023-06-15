@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Round Robin Scheduling</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: larger;
+        margin: 20px;
+        background: rgb(238,174,202);
+        background: linear-gradient(254deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      label {
+        font-weight: bold;
+        padding-right: 10px;
+      }
+
+      input[type="number"] {
+        width: 60px;
+        background-color: transparent;
+        border-radius: 10px;
+        padding: 5px;
+      }
+
+      button {
+        margin-top: 10px;
+        border-radius: 10px;
+        padding: 8px 16px;
+        background: linear-gradient(245deg,rgb(107, 181, 238) 0%, rgb(92, 157, 232) 100%);
+        font-size: 16px;
+      }
+
+      #result {
+        margin-top: 20px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      #ganttChart {
+        margin-top: 20px;
+        font-size: x-large;
+        font-family: monospace;
+        white-space: nowrap;
+        overflow-x: auto;
+      }
+
+      #avgWaitingTime,
+      #avgResponseTime,
+      #avgTurnaroundTime {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      integrity="sha384-pzjw8f+ua1zKS3l5v6Zsh9G5JQh3e4eK1Pi4E9XQjB6YbHa1p2r1XaTc2Ilq4KaV"
+      crossorigin="anonymous"
+    />
+    <script>
+      function runRoundRobin() {
+        const numProcesses = parseInt(document.getElementById("numProcesses").value);
+        const timeQuantum = parseInt(document.getElementById("timeQuantum").value);
+
+        const arrivalTimes = [];
+        const burstTimes = [];
+        const remainingTimes = [];
+        const waitingTime = [];
+        const responseTime = [];
+        const turnaroundTime = [];
+        const ganttChart = [];
+
+        // Get the arrival times and burst times for each process
+        for (let i = 0; i < numProcesses; i++) {
+          arrivalTimes.push(parseInt(document.getElementById(`arrivalTime_${i}`).value));
+          burstTimes.push(parseInt(document.getElementById(`burstTime_${i}`).value));
+          remainingTimes.push(burstTimes[i]);
+          waitingTime.push(0);
+          responseTime.push(-1);
+          turnaroundTime.push(0);
+        }
+
+        let currentTime = 0;
+        let allProcessesCompleted = false;
+
+        while (!allProcessesCompleted) {
+          allProcessesCompleted = true;
+
+          for (let i = 0; i < numProcesses; i++) {
+            if (remainingTimes[i] > 0) {
+              allProcessesCompleted = false;
+
+              if (remainingTimes[i] <= timeQuantum) {
+                currentTime += remainingTimes[i];
+                remainingTimes[i] = 0;
+              } else {
+                currentTime += timeQuantum;
+                remainingTimes[i] -= timeQuantum;
+              }
+
+              if (responseTime[i] === -1) {
+                responseTime[i] = currentTime - arrivalTimes[i];
+              }
+
+              ganttChart.push({ processIndex: i, startTime: currentTime - timeQuantum, endTime: currentTime });
+
+              if (remainingTimes[i] === 0) {
+                turnaroundTime[i] = currentTime - arrivalTimes[i];
+                waitingTime[i] = turnaroundTime[i] - burstTimes[i];
+              }
+            }
+          }
+        }
+
+        let totalWaitingTime = 0;
+        let totalResponseTime = 0;
+        let totalTurnaroundTime = 0;
+
+        for (let i = 0; i < numProcesses; i++) {
+          totalWaitingTime += waitingTime[i];
+          totalResponseTime += responseTime[i];
+          totalTurnaroundTime += turnaroundTime[i];
+        }
+
+        const avgWaitingTime = totalWaitingTime / numProcesses;
+        const avgResponseTime = totalResponseTime / numProcesses;
+        const avgTurnaroundTime = totalTurnaroundTime / numProcesses;
+
+        displayResult(waitingTime, responseTime, turnaroundTime);
+        displayGanttChart(ganttChart);
+        displayAverageWaitingTime(avgWaitingTime);
+        displayAverageResponseTime(avgResponseTime);
+        displayAverageTurnaroundTime(avgTurnaroundTime);
+      }
+
+      function displayResult(waitingTime, responseTime, turnaroundTime) {
+        let tableHtml = `
+          <table>
+            <tr>
+              <th>Process</th>
+              <th>Waiting Time</th>
+              <th>Response Time</th>
+              <th>Turnaround Time</th>
+            </tr>
+        `;
+
+        for (let i = 0; i < waitingTime.length; i++) {
+          tableHtml += `
+            <tr>
+              <td>${i}</td>
+              <td>${waitingTime[i]}</td>
+              <td>${responseTime[i]}</td>
+              <td>${turnaroundTime[i]}</td>
+            </tr>
+          `;
+        }
+
+        tableHtml += `</table>`;
+        document.getElementById("result").innerHTML = tableHtml;
+      }
+
+      function displayGanttChart(ganttChart) {
+        let ganttChartHtml = "";
+
+        for (let i = 0; i < ganttChart.length; i++) {
+          const processIndex = ganttChart[i].processIndex;
+          const startTime = ganttChart[i].startTime;
+          const endTime = ganttChart[i].endTime;
+          const processTime = endTime - startTime;
+
+          ganttChartHtml += `<span>P${processIndex}(${processTime})</span><span>|</span>`;
+
+          if (i === ganttChart.length - 1) {
+            ganttChartHtml += `<span>${endTime}</span>`;
+          }
+        }
+
+        document.getElementById("ganttChart").innerHTML = ganttChartHtml;
+      }
+
+      function displayAverageWaitingTime(avgWaitingTime) {
+        document.getElementById("avgWaitingTime").innerText = `Average Waiting Time: ${avgWaitingTime}`;
+      }
+
+      function displayAverageResponseTime(avgResponseTime) {
+        document.getElementById("avgResponseTime").innerText = `Average Response Time: ${avgResponseTime}`;
+      }
+
+      function displayAverageTurnaroundTime(avgTurnaroundTime) {
+        document.getElementById("avgTurnaroundTime").innerText = `Average Turnaround Time: ${avgTurnaroundTime}`;
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Round Robin Scheduling</h1>
+
+    <div id="inputForm">
+      <div class="form-group">
+        <label for="numProcesses">Number of Processes:</label>
+        <input type="number" id="numProcesses" min="1" max="10" value="1" />
+      </div>
+
+      <div class="form-group">
+        <label for="timeQuantum">Time Quantum:</label>
+        <input type="number" id="timeQuantum" min="1" value="1" />
+      </div>
+
+      <div id="processes">
+        <h3>Process Details:</h3>
+        <table>
+          <tr>
+            <th>Process</th>
+            <th>Arrival Time</th>
+            <th>Burst Time</th>
+          </tr>
+          <tbody id="processTable"></tbody>
+        </table>
+      </div>
+
+      <button onclick="runRoundRobin()">Run Round Robin</button>
+    </div>
+
+    <div id="result"></div>
+
+    <div id="ganttChart"></div>
+
+    <div id="avgWaitingTime"></div>
+    <div id="avgResponseTime"></div>
+    <div id="avgTurnaroundTime"></div>
+
+    <script>
+      document.getElementById("numProcesses").addEventListener("input", createProcessTable);
+
+      function createProcessTable() {
+        const numProcesses = parseInt(document.getElementById("numProcesses").value);
+        const processTable = document.getElementById("processTable");
+        let tableHtml = "";
+
+        for (let i = 0; i < numProcesses; i++) {
+          tableHtml += `
+            <tr>
+              <td>P${i}</td>
+              <td><input type="number" id="arrivalTime_${i}" min="0" value="0" /></td>
+              <td><input type="number" id="burstTime_${i}" min="1" value="1" /></td>
+            </tr>
+          `;
+        }
+
+        processTable.innerHTML = tableHtml;
+      }
+
+      createProcessTable();
+    </script>
+  </body>
+</html>

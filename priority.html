@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Non-Premptive Priority Scheduling</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: rgb(238,174,202);
+      background: linear-gradient(254deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      padding: 5px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+
+    input[type="submit"] {
+      padding: 5px 10px;
+      background-color: blue;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #1a5adb8d;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: blue;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    #scheduled-order {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    #gantt-chart {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .process-bar {
+      height: 40px;
+      text-align: center;
+      padding: 5px;
+      border: 1px solid #ccc;
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Non-Premptive Priority Scheduling</h1>
+
+  <form id="process-form">
+    <label for="process-name">Process Name:</label>
+    <input type="text" id="process-name" required>
+    <label for="process-priority">Priority:</label>
+    <input type="number" id="process-priority" required>
+    <label for="process-arrival">Arrival Time:</label>
+    <input type="number" id="process-arrival" required>
+    <label for="process-burst">Burst Time:</label>
+    <input type="number" id="process-burst" required>
+    <input type="submit" value="Add Process">
+  </form>
+
+  <table id="process-table">
+    <tr>
+      <th>Process Name</th>
+      <th>Priority</th>
+      <th>Arrival Time</th>
+      <th>Burst Time</th>
+    </tr>
+  </table>
+
+  <button onclick="scheduleProcesses()">Schedule Processes</button>
+
+  <h2>Scheduled Order:</h2>
+  <p id="scheduled-order"></p>
+
+  <div id="gantt-chart"></div>
+
+  <script>
+    // Array to store the processes
+    let processes = [];
+
+    // Function to add a process to the table
+    function addProcess() {
+      const processName = document.getElementById("process-name").value;
+      const processPriority = document.getElementById("process-priority").value;
+      const processArrival = document.getElementById("process-arrival").value;
+      const processBurst = document.getElementById("process-burst").value;
+
+      // Add the process to the processes array
+      processes.push({
+        name: processName,
+        priority: parseInt(processPriority),
+        arrival: parseInt(processArrival),
+        burst: parseInt(processBurst),
+      });
+
+      // Clear the input fields
+      document.getElementById("process-name").value = "";
+      document.getElementById("process-priority").value = "";
+      document.getElementById("process-arrival").value = "";
+      document.getElementById("process-burst").value = "";
+
+      // Generate the table row HTML for the new process
+      const newRow = `<tr>
+        <td>${processName}</td>
+        <td>${processPriority}</td>
+        <td>${processArrival}</td>
+        <td>${processBurst}</td>
+      </tr>`;
+
+      // Append the new row to the table
+      document.getElementById("process-table").innerHTML += newRow;
+    }
+
+    // Function to schedule the processes based on priority and arrival time
+    function scheduleProcesses() {
+      // Sort the processes based on arrival time and priority (ascending order)
+      processes.sort((a, b) => {
+        if (a.arrival !== b.arrival) {
+          return a.arrival - b.arrival;
+        } else {
+          return a.priority - b.priority;
+        }
+      });
+
+      // Extract the process names into an array
+      const scheduledOrder = processes.map((process) => process.name);
+
+      // Display the scheduled order on the webpage
+      document.getElementById("scheduled-order").textContent = scheduledOrder.join(" -> ");
+
+      // Create a Gantt chart
+      const ganttChart = document.getElementById("gantt-chart");
+      ganttChart.innerHTML = "";
+
+      let currentTime = 0;
+      let chartHTML = "";
+
+      for (let i = 0; i < processes.length; i++) {
+        const process = processes[i];
+        const processBar = document.createElement("div");
+        processBar.classList.add("process-bar");
+        processBar.style.width = process.burst * 40 + "px";
+        processBar.style.backgroundColor = getRandomColor();
+        processBar.textContent = process.name;
+
+        chartHTML += processBar.outerHTML;
+        currentTime += process.burst;
+      }
+
+      ganttChart.innerHTML = chartHTML;
+    }
+
+    // Event listener for the form submit event
+    document.getElementById("process-form").addEventListener("submit", function (event) {
+      event.preventDefault();
+      addProcess();
+    });
+
+    // Function to generate random colors for the Gantt chart
+    function getRandomColor() {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+  </script>
+</body>
+</html>

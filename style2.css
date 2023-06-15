@@ -1,0 +1,125 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f2f2f2;
+  }
+  
+  h2 {
+    color: #008080;
+  }
+  
+  a {
+    transition-duration: 0.4s;
+    font-size: larger;
+    color: black;
+  }
+  
+  a:hover {
+    color: #008080;
+  }
+  
+  .menu {
+    text-decoration: none;
+  }
+  
+  hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+  }
+  
+  .centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .navbar img {
+    width: 250px;
+    height: 100px;
+  }
+  
+  .navbar a {
+    margin: 10px 0;
+  }
+  
+  .navbar hr {
+    width: 80%;
+  }
+  
+/* Styles for inputs */
+input[type="number"],
+input[type="text"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+/* Styles for buttons */
+.button,
+.button1,
+.button2 {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition-duration: 0.4s;
+}
+
+.button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+.button1 {
+  background-color: #f44336;
+  color: white;
+}
+
+.button1:hover {
+  background-color: #d32f2f;
+}
+
+.button2 {
+  background-color: #008CBA;
+  color: white;
+}
+
+.button2:hover {
+  background-color: #007f9e;
+}
+
+/* Styles for input focus */
+input[type="number"]:focus,
+input[type="text"]:focus {
+  outline: none;
+  border-color: #008080;
+  box-shadow: 0 0 5px #008080;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+table {
+  margin: 0 auto;
+}
+
+/* Add additional styles as needed */

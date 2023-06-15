@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Banker's Algorithm</title>
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: rgb(238,174,202);
+      background: linear-gradient(254deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 30px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid rgb(0, 0, 0);
+    }
+
+    th {
+      background-color: aqua;
+    }
+
+    td{
+        background-color: rgb(160, 228, 255);
+    }
+
+    td input[type="number"] {
+      width: 50px;
+      text-align: center;
+    }
+
+    td.safeProcess {
+      background-color: green;
+    }
+
+    td.unsafeProcess {
+      background-color: red;
+    }
+
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: rgb(42, 118, 248);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #901dd2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Banker's Algorithm</h1>
+
+  <h2>Available Resources</h2>
+  <table>
+    <tr>
+      <th>Resource</th>
+      <th>Quantity</th>
+    </tr>
+    <tr>
+      <td>Resource A</td>
+      <td><input type="number" id="resourceA" min="0"></td>
+    </tr>
+    <tr>
+      <td>Resource B</td>
+      <td><input type="number" id="resourceB" min="0"></td>
+    </tr>
+    <tr>
+      <td>Resource C</td>
+      <td><input type="number" id="resourceC" min="0"></td>
+    </tr>
+  </table>
+
+  <h2>Processes</h2>
+  <table id="processTable">
+    <tr>
+      <th>Process</th>
+      <th>Allocation A</th>
+      <th>Allocation B</th>
+      <th>Allocation C</th>
+      <th>Max A</th>
+      <th>Max B</th>
+      <th>Max C</th>
+      <th>Need A</th>
+      <th>Need B</th>
+      <th>Need C</th>
+      <th>Safe?</th>
+    </tr>
+  </table>
+
+  <h2>Allocation Matrix</h2>
+  <table id="allocationMatrix"></table>
+
+  <h2>Need Matrix</h2>
+  <table id="needMatrix"></table>
+
+  <button onclick="addProcessRow()">Add Process</button>
+  <button onclick="runBankersAlgorithm()">Check Safety</button>
+
+  <script>
+    function addProcessRow() {
+      var table = document.getElementById("processTable");
+      var rowCount = table.rows.length;
+
+      var row = table.insertRow(rowCount);
+      var processNum = rowCount - 1;
+
+      var cell0 = row.insertCell(0);
+      cell0.innerHTML = "P" + processNum;
+
+      var cell1 = row.insertCell(1);
+      cell1.innerHTML = '<input type="number" id="allocationP' + processNum + 'A" value="0" min="0">';
+
+      var cell2 = row.insertCell(2);
+      cell2.innerHTML = '<input type="number" id="allocationP' + processNum + 'B" value="0" min="0">';
+
+      var cell3 = row.insertCell(3);
+      cell3.innerHTML = '<input type="number" id="allocationP' + processNum + 'C" value="0" min="0">';
+
+      var cell4 = row.insertCell(4);
+      cell4.innerHTML = '<input type="number" id="maxP' + processNum + 'A" value="0" min="0">';
+
+      var cell5 = row.insertCell(5);
+      cell5.innerHTML = '<input type="number" id="maxP' + processNum + 'B" value="0" min="0">';
+
+      var cell6 = row.insertCell(6);
+      cell6.innerHTML = '<input type="number" id="maxP' + processNum + 'C" value="0" min="0">';
+
+      var cell7 = row.insertCell(7);
+      cell7.innerHTML = '<span id="needP' + processNum + 'A"></span>';
+
+      var cell8 = row.insertCell(8);
+      cell8.innerHTML = '<span id="needP' + processNum + 'B"></span>';
+
+      var cell9 = row.insertCell(9);
+      cell9.innerHTML = '<span id="needP' + processNum + 'C"></span>';
+
+      var cell10 = row.insertCell(10);
+      cell10.innerHTML = '<span id="safeP' + processNum + '"></span>';
+    }
+
+    function runBankersAlgorithm() {
+      // Get available resources
+      var resourceA = parseInt(document.getElementById("resourceA").value);
+      var resourceB = parseInt(document.getElementById("resourceB").value);
+      var resourceC = parseInt(document.getElementById("resourceC").value);
+
+      // Get allocation, max, and need for each process
+      var table = document.getElementById("processTable");
+      var rowCount = table.rows.length;
+
+      var allocationMatrixTable = document.getElementById("allocationMatrix");
+      allocationMatrixTable.innerHTML = ""; // Clear previous content
+      var needMatrixTable = document.getElementById("needMatrix");
+      needMatrixTable.innerHTML = ""; // Clear previous content
+
+      var allocationHeaders = "<tr><th>Process</th>";
+      var needHeaders = "<tr><th>Process</th>";
+
+      for (var i = 0; i < rowCount; i++) {
+        var allocationA = parseInt(document.getElementById("allocationP" + i + "A").value);
+        var allocationB = parseInt(document.getElementById("allocationP" + i + "B").value);
+        var allocationC = parseInt(document.getElementById("allocationP" + i + "C").value);
+        var maxA = parseInt(document.getElementById("maxP" + i + "A").value);
+        var maxB = parseInt(document.getElementById("maxP" + i + "B").value);
+        var maxC = parseInt(document.getElementById("maxP" + i + "C").value);
+        var needA = maxA - allocationA;
+        var needB = maxB - allocationB;
+        var needC = maxC - allocationC;
+
+        document.getElementById("needP" + i + "A").innerHTML = needA;
+        document.getElementById("needP" + i + "B").innerHTML = needB;
+        document.getElementById("needP" + i + "C").innerHTML = needC;
+
+        var safe = (needA <= resourceA && needB <= resourceB && needC <= resourceC) ? "Yes" : "No";
+        document.getElementById("safeP" + i).innerHTML = safe;
+
+        var row = table.rows[i];
+        if (safe === "Yes") {
+          row.classList.add("safeProcess");
+          row.classList.remove("unsafeProcess");
+        } else {
+          row.classList.add("unsafeProcess");
+          row.classList.remove("safeProcess");
+        }
+
+        // Update Allocation Matrix
+        var allocationRow = allocationMatrixTable.insertRow(i);
+        var allocationProcessCell = allocationRow.insertCell(0);
+        allocationProcessCell.innerHTML = "P" + (i);
+        var allocationQuantityCellA = allocationRow.insertCell(1);
+        allocationQuantityCellA.innerHTML = allocationA;
+        var allocationQuantityCellB = allocationRow.insertCell(2);
+        allocationQuantityCellB.innerHTML = allocationB;
+        var allocationQuantityCellC = allocationRow.insertCell(3);
+        allocationQuantityCellC.innerHTML = allocationC;
+
+        // Update Need Matrix
+        var needRow = needMatrixTable.insertRow();
+        var needProcessCell = needRow.insertCell(0);
+        needProcessCell.innerHTML = "P" + (i);
+        var needQuantityCellA = needRow.insertCell(1);
+        needQuantityCellA.innerHTML = needA;
+        var needQuantityCellB = needRow.insertCell(2);
+        needQuantityCellB.innerHTML = needB;
+        var needQuantityCellC = needRow.insertCell(3);
+        needQuantityCellC.innerHTML = needC;
+
+        if (i === 1) {
+          allocationHeaders += "<th>Allocation A</th><th>Allocation B</th><th>Allocation C</th>";
+          needHeaders += "<th>Need A</th><th>Need B</th><th>Need C</th>";
+        }
+      }
+
+      allocationMatrixTable.insertAdjacentHTML('afterbegin', allocationHeaders + "</tr>");
+      needMatrixTable.insertAdjacentHTML('afterbegin', needHeaders + "</tr>");
+    }
+  </script>
+</body>
+</html>
